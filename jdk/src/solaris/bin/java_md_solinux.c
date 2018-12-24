@@ -833,6 +833,7 @@ LoadJavaVM(const char *jvmpath, InvocationFunctions *ifn)
 
     JLI_TraceLauncher("JVM path is %s\n", jvmpath);
 
+    /* 在这里加载libjvm.so */
     libjvm = dlopen(jvmpath, RTLD_NOW + RTLD_GLOBAL);
     if (libjvm == NULL) {
 #if defined(__solaris__) && defined(__sparc) && !defined(_LP64) /* i.e. 32-bit sparc */
@@ -885,6 +886,7 @@ LoadJavaVM(const char *jvmpath, InvocationFunctions *ifn)
         return JNI_FALSE;
     }
 
+    /* 设置好函数指针，用于操作jvm */
     ifn->CreateJavaVM = (CreateJavaVM_t)
         dlsym(libjvm, "JNI_CreateJavaVM");
     if (ifn->CreateJavaVM == NULL) {
@@ -1029,6 +1031,10 @@ ContinueInNewThread0(int (JNICALL *continuation)(void *), jlong stack_size, void
       pthread_attr_setstacksize(&attr, stack_size);
     }
 
+    /*
+     * 1.3 启动一个新线程，block当前线程。新线程的函数入口为continuation，即
+     * JavaMain函数。
+     */
     if (pthread_create(&tid, &attr, (void *(*)(void*))continuation, (void*)args) == 0) {
       void * tmp;
       pthread_join(tid, &tmp);

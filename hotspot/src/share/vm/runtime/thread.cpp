@@ -1562,6 +1562,7 @@ void JavaThread::block_if_vm_exited() {
 // Remove this ifdef when C1 is ported to the compiler interface.
 static void compiler_thread_entry(JavaThread* thread, TRAPS);
 
+// 2.5 初始化一个JavaThread
 JavaThread::JavaThread(ThreadFunction entry_point, size_t stack_sz) :
   Thread()
 #if INCLUDE_ALL_GCS
@@ -1580,6 +1581,7 @@ JavaThread::JavaThread(ThreadFunction entry_point, size_t stack_sz) :
   os::ThreadType thr_type = os::java_thread;
   thr_type = entry_point == &compiler_thread_entry ? os::compiler_thread :
                                                      os::java_thread;
+  // 2.6 创建一个os级别的线程
   os::create_thread(this, thr_type, stack_sz);
   // The _osthread may be NULL here because we ran out of memory (too many threads active).
   // We need to throw and OutOfMemoryError - however we cannot do this here because the caller
@@ -1633,6 +1635,7 @@ JavaThread::~JavaThread() {
 
 
 // The first routine called by a new Java thread
+// 2.14 JVM级别线程的入口，os级别的线程启动之后会从这里开始。
 void JavaThread::run() {
   // initialize thread-local alloc buffer related fields
   this->initialize_tlab();
@@ -3302,6 +3305,7 @@ void Threads::threads_do(ThreadClosure* tc) {
   // If CompilerThreads ever become non-JavaThreads, add them here
 }
 
+// 1.7 JVM初始化
 jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   extern void JDK_Version_init();
@@ -3361,6 +3365,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   if (adjust_after_os_result != JNI_OK) return adjust_after_os_result;
 
   // intialize TLS
+  // 使用pthread_key_create创建一个TLS的key
   ThreadLocalStorage::init();
 
   // Initialize output stream logging
@@ -3378,6 +3383,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
   // Initialize Threads state
+  // Threads::create_vm中会初始化Threads::_thread_list
   _thread_list = NULL;
   _number_of_threads = 0;
   _number_of_non_daemon_threads = 0;
@@ -3386,6 +3392,12 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   vm_init_globals();
 
   // Attach the main thread to this os thread
+  // 1.8 创建一个JavaThread，将当前native thread attach到上面。这个效果和
+  // JNI call AttachCurrentThread类似，只不过main_thread比较特殊，需要自行完成
+  // 完成这个过程略，而不是调用JNI。
+  // main_thread就是java中第一个执行字节码的线程，对应一个java.lang.Thread，
+  // os::Linux::_main_thread中也会记录main_thread的指针。
+  // Thread::operator new (size=1512)
   JavaThread* main_thread = new JavaThread();
   main_thread->set_thread_state(_thread_in_vm);
   // must do this before set_active_handles and initialize_thread_local_storage
@@ -3398,6 +3410,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   main_thread->set_active_handles(JNIHandleBlock::allocate_block());
 
+  // 创建一个OSThread
   if (!main_thread->set_as_starting_thread()) {
     vm_shutdown_during_initialization(
       "Failed necessary internal allocation. Out of swap space");
@@ -3439,6 +3452,8 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     VMThread::create();
     Thread* vmthread = VMThread::vm_thread();
 
+    // 为一个Thread创建一个新的native thread，并做好attach。
+    // 入口函数为java_start
     if (!os::create_thread(vmthread, os::vm_thread))
       vm_exit_during_initialization("Cannot create VM thread. Out of system resources.");
 
@@ -3446,6 +3461,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     // Monitors can have spurious returns, must always check another state flag
     {
       MutexLocker ml(Notify_lock);
+      // 还有一个启动的操作，主要是设置状态以及一些同步操作
       os::start_thread(vmthread);
       while (vmthread->active_handles() == NULL) {
         Notify_lock->wait();
@@ -3492,6 +3508,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     Handle thread_group = create_initial_thread_group(CHECK_0);
     Universe::set_main_thread_group(thread_group());
     initialize_class(vmSymbols::java_lang_Thread(), CHECK_0);
+    // 在这里完成Thread和java.lang.Thread的关联
     oop thread_object = create_initial_thread(thread_group, main_thread, CHECK_0);
     main_thread->set_threadObj(thread_object);
     // Set thread status to running since main thread has
@@ -3504,6 +3521,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
     // The VM preresolves methods to these classes. Make sure that they get initialized
     initialize_class(vmSymbols::java_lang_reflect_Method(), CHECK_0);
+    // 这里会启动两个线程，貌似是加载了一个class。
     initialize_class(vmSymbols::java_lang_ref_Finalizer(),  CHECK_0);
     call_initializeSystemClass(CHECK_0);
 
@@ -3601,6 +3619,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   JvmtiExport::enter_live_phase();
 
   // Signal Dispatcher needs to be started before VMInit event is posted
+  // 启动一个线程用于管理signal
   os::signal_init();
 
   // Start Attach Listener if +StartAttachListener or it can't be started lazily
@@ -3631,6 +3650,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   // initialize compiler(s)
 #if defined(COMPILER1) || defined(COMPILER2) || defined(SHARK)
+  // 创建两个compile_thread
   CompileBroker::compilation_init();
 #endif
 
@@ -3645,6 +3665,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
 #if INCLUDE_MANAGEMENT
+  // 创建一个service_thread
   Management::initialize(THREAD);
 #endif // INCLUDE_MANAGEMENT
 
@@ -3685,6 +3706,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
       //   aren't, late joiners might appear to start slowly (we might
       //   take a while to process their first tick).
       if (PeriodicTask::num_tasks() > 0) {
+          // 启动一个watcher thread
           WatcherThread::start();
       }
   }

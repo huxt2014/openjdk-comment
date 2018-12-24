@@ -848,6 +848,7 @@ inline BasicType as_BasicType(TosState state) {
 TosState as_TosState(BasicType type);
 
 
+// thread的各种状态
 // JavaThreadState keeps track of which part of the code a thread is executing in. This
 // information is needed by the safepoint code.
 //

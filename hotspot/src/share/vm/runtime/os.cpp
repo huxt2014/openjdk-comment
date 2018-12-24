@@ -327,6 +327,7 @@ void os::init_before_ergo() {
   large_page_init();
 }
 
+// 创建一个线程用于处理signal
 void os::signal_init() {
   if (!ReduceSignalUsage) {
     // Setup JavaThread for processing signals
@@ -567,7 +568,9 @@ void* os::malloc(size_t size, MEMFLAGS flags) {
   return os::malloc(size, flags, CALLER_PC);
 }
 
+// AllocateHeap会调用这个函数来分配内存
 void* os::malloc(size_t size, MEMFLAGS memflags, const NativeCallStack& stack) {
+  // 记录内存分配的统计信息
   NOT_PRODUCT(inc_stat_counter(&num_mallocs, 1));
   NOT_PRODUCT(inc_stat_counter(&alloc_bytes, size));
 
@@ -765,6 +768,7 @@ long os::random() {
 // to do so in a context in which races are impossible, or should do appropriate
 // locking.
 
+// 2.11 因为需要需要进行一些同步操作，让os级别的线程开始启动
 void os::start_thread(Thread* thread) {
   // guard suspend/resume
   MutexLockerEx ml(thread->SR_lock(), Mutex::_no_safepoint_check_flag);

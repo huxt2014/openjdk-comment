@@ -250,6 +250,7 @@ JLI_Launch(int argc, char ** argv,              /* main argc, argc */
         start = CounterGet();
     }
 
+    /* 1.2 获得操作jvm的函数指针 */
     if (!LoadJavaVM(jvmpath, &ifn)) {
         return(6);
     }
@@ -301,6 +302,7 @@ JLI_Launch(int argc, char ** argv,              /* main argc, argc */
     /* set the -Dsun.java.launcher.* platform properties */
     SetJavaLauncherPlatformProps();
 
+    /* 继续到ContinueInNewThread */
     return JVMInit(&ifn, threadStackSize, argc, argv, mode, what, ret);
 }
 /*
@@ -351,6 +353,7 @@ JLI_Launch(int argc, char ** argv,              /* main argc, argc */
     } while (JNI_FALSE)
 
 int JNICALL
+/* 1.4 这里才是jvm真正开始的地方，在一个新的线程中开始。 */
 JavaMain(void * _args)
 {
     JavaMainArgs *args = (JavaMainArgs *)_args;
@@ -369,6 +372,7 @@ JavaMain(void * _args)
     int ret = 0;
     jlong start, end;
 
+    // 这个函数啥也没做
     RegisterThread();
 
     /* Initialize the virtual machine */
@@ -441,6 +445,7 @@ JavaMain(void * _args)
      * This method also correctly handles launching existing JavaFX
      * applications that may or may not have a Main-Class manifest entry.
      */
+    // 找到main class
     mainClass = LoadMainClass(env, mode, what);
     CHECK_EXCEPTION_NULL_LEAVE(mainClass);
     /*
@@ -465,6 +470,7 @@ JavaMain(void * _args)
      * is not required. The main method is invoked here so that extraneous java
      * stacks are not in the application stack trace.
      */
+    // 找到main函数
     mainID = (*env)->GetStaticMethodID(env, mainClass, "main",
                                        "([Ljava/lang/String;)V");
     CHECK_EXCEPTION_NULL_LEAVE(mainID);
@@ -474,6 +480,7 @@ JavaMain(void * _args)
     CHECK_EXCEPTION_NULL_LEAVE(mainArgs);
 
     /* Invoke main method. */
+    // 调用main函数
     (*env)->CallStaticVoidMethod(env, mainClass, mainID, mainArgs);
 
     /*
@@ -1211,6 +1218,7 @@ InitializeJVM(JavaVM **pvm, JNIEnv **penv, InvocationFunctions *ifn)
                    i, args.options[i].optionString);
     }
 
+    /* 1.5 创建JVM，通过pvm获得JVM的指针 */
     r = ifn->CreateJavaVM(pvm, (void **)penv, &args);
     JLI_MemFree(options);
     return r == JNI_OK;

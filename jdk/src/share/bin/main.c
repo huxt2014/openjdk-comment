@@ -90,6 +90,7 @@ WinMain(HINSTANCE inst, HINSTANCE previnst, LPSTR cmdline, int cmdshow)
 
 #else /* JAVAW */
 int
+/* 1.1 java可执行文件的入口 */
 main(int argc, char **argv)
 {
     int margc;

@@ -33,6 +33,8 @@ typedef int (*pthread_getattr_func_type) (pthread_t, pthread_attr_t *);
 // Information about the protection of the page at address '0' on this os.
 static bool zero_page_read_protected() { return true; }
 
+// 记录操作系统相关的东西：page_size, physical_memory等
+// 可以认为是os类的一部分
 class Linux {
   friend class os;
   friend class TestReserveMemorySpecial;

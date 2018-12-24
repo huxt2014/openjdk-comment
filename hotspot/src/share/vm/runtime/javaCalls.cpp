@@ -41,6 +41,7 @@
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
 
+// 这个文件包含了java中函数调用的实现
 // -----------------------------------------------------
 // Implementation of JavaCallWrapper
 
@@ -298,6 +299,7 @@ void JavaCalls::call_static(JavaValue* result, KlassHandle klass, Symbol* name, 
 // Implementation of JavaCalls (low level)
 
 
+// Java调用函数都会走到这里来
 void JavaCalls::call(JavaValue* result, methodHandle method, JavaCallArguments* args, TRAPS) {
   // Check if we need to wrap a potential OS exception handler around thread
   // This is used for e.g. Win32 structured exception handlers
@@ -394,6 +396,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
   { JavaCallWrapper link(method, receiver, result, CHECK);
     { HandleMark hm(thread);  // HandleMark used by HandleMarkCleaner
 
+      // 2.16 通过call_stub获得一个函数指针，然后调用该函数
       StubRoutines::call_stub()(
         (address)&link,
         // (intptr_t*)&(result->_value), // see NOTE above (compiler problem)

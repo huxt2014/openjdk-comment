@@ -325,6 +325,9 @@ class StubGenerator: public StubCodeGenerator {
     __ movptr(c_rarg1, entry_point);    // get entry_point
     __ mov(r13, rsp);                   // set sender sp
     BLOCK_COMMENT("call Java function");
+    // 2.19 调用entry_point，entry_point是由method->from_interpreted_entry获得，
+    // 简而言之，entry_point就是JVM解释器的入口。
+    // 这个文件使用汇编对函数调用做了优化
     __ call(c_rarg1);
 
     BLOCK_COMMENT("call_stub_return_address:");
@@ -3884,6 +3887,7 @@ class StubGenerator: public StubCodeGenerator {
 
     StubRoutines::_forward_exception_entry = generate_forward_exception();
 
+    // 2.18 _call_stub_entry在这里定义
     StubRoutines::_call_stub_entry =
       generate_call_stub(StubRoutines::_call_stub_return_address);
 

@@ -528,6 +528,7 @@ public:
 
 protected:
   // OS data associated with the thread
+  // 每个Thread都有一个OSThread记录相关信息
   OSThread* _osthread;  // Platform-specific thread information
 
   // Thread local resource area for temporary allocation within the VM
@@ -541,6 +542,7 @@ protected:
 
   // Support for stack overflow handling, get_thread, etc.
   address          _stack_base;
+  // thread_base + thread_stack_size
   size_t           _stack_size;
   uintptr_t        _self_raw_id;      // used by get_thread (mutable)
   int              _lgrp_id;
@@ -806,6 +808,7 @@ class JavaThread: public Thread {
 
   JavaFrameAnchor _anchor;                       // Encapsulation of current java frame and it state
 
+  // JVM级别线程的入口，默认是hotspot/src/share/vm/prims/jvm.cpp thread_entry
   ThreadFunction _entry_point;
 
   JNIEnv        _jni_environment;
@@ -1887,6 +1890,7 @@ inline CompilerThread* CompilerThread::current() {
 
 // The active thread queue. It also keeps track of the current used
 // thread priorities.
+// 用于管理线程池，以数组的方式存在
 class Threads: AllStatic {
   friend class VMStructs;
  private:
@@ -1909,6 +1913,7 @@ class Threads: AllStatic {
   static void threads_do(ThreadClosure* tc);
 
   // Initializes the vm and creates the vm thread
+  // 通常只会调用一次，
   static jint create_vm(JavaVMInitArgs* args, bool* canTryAgain);
   static void convert_vm_init_libraries_to_agents();
   static void create_vm_init_libraries();

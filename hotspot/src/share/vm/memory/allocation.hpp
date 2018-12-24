@@ -59,6 +59,7 @@ public:
 };
 typedef AllocFailStrategy::AllocFailEnum AllocFailType;
 
+// jvm中使用的class都需要继承如下class中的一个
 // All classes in the virtual machine must be subclassed
 // by one of the following allocation classes:
 //
@@ -68,14 +69,56 @@ typedef AllocFailStrategy::AllocFailEnum AllocFailType;
 // For objects allocated in the C-heap (managed by: free & malloc).
 // - CHeapObj
 //
+//                                                                      +--------------+
+//                                                                   +--|CompilerThread|
+//                                                                   |  +--------------+
+//                                                    +----------+   |  +-------------+
+//                                                 +--|JavaThread|<--+--|ServiceThread|
+//                                                 |  +----------+      +-------------+
+//                     +------------+   +------+   |  +-----------+   +--------+
+//                  +--|ThreadShadow|<--|Thread|<--+--|NamedThread|<--|VMThread|
+//                  |  +------------+   +------+   |  +-----------+   +--------+
+//                  |  +--------+                  |  +-------------+
+//                  +--|OSThread|                  +--|WatcherThread|
+//  +-----------+   |  +--------+                     +-------------+
+//  |CHeapObject|<--+
+//  +-----------+
+//
 // For objects allocated on the stack.
 // - StackObj
+//
+//                  +------------+
+//               +--|ObjectWaiter|
+//               |  +------------+
+//  +--------+   |
+//  |StackObj|<--+
+//  +--------+
+//
 //
 // For embedded objects.
 // - ValueObj
 //
 // For classes used as name spaces.
+// 仅有函数和static attribute，不会生成实例
 // - AllStatic
+//                   +---------+
+//                +--|JavaCalls|
+//                |  +---------+
+//                |  +-------+
+//                +--|Threads|
+//                |  +-------+
+//  +---------+   |  +--------+
+//  |AllStatic|<--+--|os|Linux|
+//  +---------+   |  +--------+
+//                |  +------------------+
+//                +--|ThreadLocalStorage|
+//                |  +------------------+
+//                |  +-------------+
+//                +--|ThreadService|
+//                |  +-------------+
+//                |  +----------------+
+//                +--|SystemDictionary|
+//                   +----------------+
 //
 // For classes in Metaspace (class data)
 // - MetaspaceObj
@@ -134,6 +177,7 @@ class AllocatedObj {
 
 /*
  * Memory types
+ * 用于template <MemoryType> CHeapObj
  */
 enum MemoryType {
   // Memory type by sub systems. It occupies lower byte.

@@ -2935,6 +2935,7 @@ void jio_print(const char* s) {
 // instance), and are very unlikely.  Because IsAlive needs to be fast and its
 // implementation is local to this file, we always lock Threads_lock for that one.
 
+// 2.15 绕了一大圈，终于到这里了。这个函数是在初始化JavaThread的时候记录的。
 static void thread_entry(JavaThread* thread, TRAPS) {
   HandleMark hm(THREAD);
   Handle obj(THREAD, thread->threadObj());
@@ -2942,12 +2943,15 @@ static void thread_entry(JavaThread* thread, TRAPS) {
   JavaCalls::call_virtual(&result,
                           obj,
                           KlassHandle(THREAD, SystemDictionary::Thread_klass()),
+                          // vmSymbols::run_method_name() == "run"
                           vmSymbols::run_method_name(),
                           vmSymbols::void_method_signature(),
                           THREAD);
 }
 
 
+// 2.3 Thread instance的初始化在Java代码层面完成，启动一个线程时会执行Java
+// 代码中的native method start0，之后会映射到这个函数。
 JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
   JVMWrapper("JVM_StartThread");
   JavaThread *native_thread = NULL;
@@ -2983,7 +2987,10 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
       // size_t (an unsigned type), so avoid passing negative values which would
       // result in really large stacks.
       size_t sz = size > 0 ? (size_t) size : 0;
+      // 2.4 一个java.lang.Thread会对应一个JavaThread，在启动的时候初始化。其中
+      // thread_entry就是JVM里面启动线程的入口，并非是os线程的函数入口。
       native_thread = new JavaThread(&thread_entry, sz);
+      // 2.9 正常情况下，到这里os级别的线程应该已经启动了，但是还处于block的状态
 
       // At this point it may be possible that no osthread was created for the
       // JavaThread due to lack of memory. Check for this situation and throw
@@ -3016,6 +3023,7 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
               "unable to create new native thread");
   }
 
+  // 2.10 为啥还要显式地再start一下呢
   Thread::start(native_thread);
 
 JVM_END

@@ -101,6 +101,7 @@ typedef void (*java_call_t)(JavaValue* value, methodHandle* method, JavaCallArgu
 
 class MallocTracker;
 
+// 记录page_size，processor_count
 class os: AllStatic {
   friend class VMStructs;
   friend class MallocTracker;

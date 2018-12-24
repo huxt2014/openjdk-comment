@@ -58,6 +58,7 @@ enum ThreadState {
 // the main thread into its own Thread at will.
 
 
+// The OSThread class holds OS-specific thread information.
 class OSThread: public CHeapObj<mtThread> {
   friend class VMStructs;
  private:

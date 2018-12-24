@@ -211,6 +211,8 @@ typedef JavaVM_ JavaVM;
 typedef const struct JNIInvokeInterface_ *JavaVM;
 #endif
 
+// 3.1 JNI的接口定义在这里，也就是规范中所指的JNIEnv实现。函数签名在
+// JNI specification 里面规定好了。
 struct JNINativeInterface_ {
     void *reserved0;
     void *reserved1;

@@ -1285,6 +1285,7 @@ enum JNICallType {
 
 
 
+// 调用static函数
 static void jni_invoke_static(JNIEnv *env, JavaValue* result, jobject receiver, JNICallType call_type, jmethodID method_id, JNI_ArgumentPusher *args, TRAPS) {
   methodHandle method(THREAD, Method::resolve_jmethod_id(method_id));
 
@@ -5008,9 +5009,11 @@ struct JNINativeInterface_* jni_functions_nocheck() {
 extern const struct JNIInvokeInterface_ jni_InvokeInterface;
 
 // Global invocation API vars
+/* 创建jvm的时候用于同步 */
 volatile jint vm_created = 0;
 // Indicate whether it is safe to recreate VM
 volatile jint safe_to_recreate_vm = 1;
+// jvm的引用，会暴露给外部。
 struct JavaVM_ main_vm = {&jni_InvokeInterface};
 
 
@@ -5177,6 +5180,7 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
   // on a multiprocessor, and at this stage of initialization the os::is_MP
   // function used to determine this will always return false. Atomic::xchg
   // does not have this problem.
+  /* 使用的都是xchgl，因为是内存操作，所以会隐式地加上锁 */
   if (Atomic::xchg(1, &vm_created) == 1) {
     return JNI_EEXIST;   // already created, or create attempt in progress
   }
@@ -5198,6 +5202,7 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
    */
   bool can_try_again = true;
 
+  // 1.6 创建JVM
   result = Threads::create_vm((JavaVMInitArgs*) args, &can_try_again);
   if (result == JNI_OK) {
     JavaThread *thread = JavaThread::current();

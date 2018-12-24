@@ -90,6 +90,8 @@ class VMOperationQueue : public CHeapObj<mtInternal> {
 // like scavenge, garbage_collect etc.
 //
 
+// 只有一个实例，用来执行VM_Operation，VM_Operation并不是java字节码，而是
+// Hotspot用于内部管理的一些指令。
 class VMThread: public NamedThread {
  private:
   static ThreadPriority _current_priority;
@@ -146,6 +148,7 @@ class VMThread: public NamedThread {
  private:
   // VM_Operation support
   static VM_Operation*     _cur_vm_operation;   // Current VM operation
+  //VMOperation队列
   static VMOperationQueue* _vm_queue;           // Queue (w/ policy) of VM operations
 
   // Pointer to single-instance of VM thread

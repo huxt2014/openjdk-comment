@@ -771,6 +771,7 @@ static bool _thread_safety_check(Thread* thread) {
 }
 
 // Thread start routine for all newly created threads
+// 所有新创建的线程的入口，os级别线程的入口。
 static void *java_start(Thread *thread) {
   // Try to randomize the cache line index of hot stack frames.
   // This helps when threads of the same stack traces evict each other's
@@ -819,17 +820,20 @@ static void *java_start(Thread *thread) {
     sync->notify_all();
 
     // wait until os::start_thread()
+    // 2.12 新启动的线程在这里等待
     while (osthread->get_state() == INITIALIZED) {
       sync->wait(Mutex::_no_safepoint_check_flag);
     }
   }
 
   // call one more level start routine
+  // 2.13 执行Thread::run
   thread->run();
 
   return 0;
 }
 
+// 2.7 在创建一个Thread的时候一般会附带创建一个OSThread
 bool os::create_thread(Thread* thread, ThreadType thr_type, size_t stack_size) {
   assert(thread->osthread() == NULL, "caller responsible");
 
@@ -899,6 +903,7 @@ bool os::create_thread(Thread* thread, ThreadType thr_type, size_t stack_size) {
     }
 
     pthread_t tid;
+    // 2.8 在这里启动一个新的线程，入口函数为java_start，这个函数在当前文件定义
     int ret = pthread_create(&tid, &attr, (void* (*)(void*)) java_start, thread);
 
     pthread_attr_destroy(&attr);
@@ -953,6 +958,7 @@ bool os::create_main_thread(JavaThread* thread) {
   return create_attached_thread(thread);
 }
 
+// 为一个JavaThread创建并绑定一个OSThread，同时设置sigmask
 bool os::create_attached_thread(JavaThread* thread) {
 #ifdef ASSERT
     thread->verify_not_published();
@@ -1060,11 +1066,13 @@ void os::free_thread_local_storage(int index) {
   assert(rslt == 0, "invalid index");
 }
 
+// 将thread的地址绑定到ThreadLocalStorage::_thread_index上
 void os::thread_local_storage_at_put(int index, void* value) {
   int rslt = pthread_setspecific((pthread_key_t)index, value);
   assert(rslt == 0, "pthread_setspecific failed");
 }
 
+// 通过ThreadLocalStorage::_thread_index获得Thread *
 extern "C" Thread* get_thread() {
   return ThreadLocalStorage::thread();
 }

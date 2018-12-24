@@ -65,7 +65,12 @@ static JNINativeMethod methods[] = {
 #undef STR
 
 JNIEXPORT void JNICALL
+// 2.1 import java.lang.Thread的时候，会执行这个函数
 Java_java_lang_Thread_registerNatives(JNIEnv *env, jclass cls)
 {
+    // 2.2 JNI有一个约定的命名规则，使得JVM在调用native method时能够找到对应
+    // 的函数。如果想不受这个命名规则的约束，那么就要使用RegisterNatives来
+    // 自行定义映射。参考：
+    // https://stackoverflow.com/questions/1010645/what-does-the-registernatives-method-do
     (*env)->RegisterNatives(env, cls, methods, ARRAY_LENGTH(methods));
 }

@@ -678,6 +678,7 @@ size_t os::Linux::default_guard_size(os::ThreadType thr_type) {
   return (thr_type == java_thread ? 0 : page_size());
 }
 
+// JVM中线程的地址信息
 // Java thread:
 //
 //   Low memory addresses

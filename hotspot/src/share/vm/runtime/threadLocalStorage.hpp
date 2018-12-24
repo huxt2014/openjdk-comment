@@ -90,6 +90,9 @@ class ThreadLocalStorage : AllStatic {
   static bool is_initialized();
 
  private:
+  // 储存的是pthread_key_create返回的key，虽然所有线程用的都是一个key，但是
+  // 通过这个key可以检索到各自的数据。进程中只有一个_thread_index，通过这个
+  // 可以获得Thread *
   static int     _thread_index;
 
   static void    generate_code_for_get_thread();

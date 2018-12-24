@@ -50,6 +50,7 @@ class DeadlockCycle;
 // When enabled, the VM will begin measuring the accumulated
 // elapsed time a thread blocked on synchronization.
 //
+// 一个管理线程的东西，与Threads是什么关系呢？
 class ThreadService : public AllStatic {
 private:
   // These counters could be moved to Threads class

@@ -74,6 +74,7 @@ class EventJavaMonitorWait;
 // It is also used as RawMonitor by the JVMTI
 
 
+// 没有继承任何类的ObjectMonitor
 class ObjectMonitor {
  public:
   enum {

@@ -40,6 +40,9 @@
 // - AllStatic
 //
 
+// 在heap上动态分配的objects需要继承这个类，例如Thread。
+// 但是貌似用得更多的是template CHeapObj。
+// 这两者的区别待核实。
 class CHeapObj {
  public:
   void* operator new(size_t size) throw();
