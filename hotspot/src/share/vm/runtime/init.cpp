@@ -106,6 +106,7 @@ jint init_globals() {
   if (status != JNI_OK)
     return status;
 
+  // 4.3
   interpreter_init();  // before any methods loaded
   invocationCounter_init();  // before any methods loaded
   marksweep_init();

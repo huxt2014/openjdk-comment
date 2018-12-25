@@ -2208,6 +2208,7 @@ address InterpreterGenerator::generate_normal_entry(bool synchronized) {
   return entry_point;
 }
 
+// 4.11 具体的生成代码的函数
 address AbstractInterpreterGenerator::generate_method_entry(AbstractInterpreter::MethodKind kind) {
   // determine code generation flags
   bool synchronized = false;
@@ -2241,6 +2242,7 @@ address AbstractInterpreterGenerator::generate_method_entry(AbstractInterpreter:
 
 }
 
+// 4.8 初始化InterpreterGenerator的时候会生成代码
 InterpreterGenerator::InterpreterGenerator(StubQueue* code)
  : CppInterpreterGenerator(code) {
    generate_all(); // down here so it can be "virtual"

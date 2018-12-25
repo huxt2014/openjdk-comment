@@ -31,6 +31,7 @@
 #ifdef CC_INTERP
 # define __ _masm->
 
+// 4.5
 void CppInterpreter::initialize() {
   if (_code != NULL) return;
   AbstractInterpreter::initialize();
@@ -40,8 +41,10 @@ void CppInterpreter::initialize() {
     TraceTime timer("Interpreter generation", TraceStartupTime);
     int code_size = InterpreterCodeSize;
     NOT_PRODUCT(code_size *= 4;)  // debug uses extra interpreter code space
+    // 4.6 获得一个_code
     _code = new StubQueue(new InterpreterCodeletInterface, code_size, NULL,
                           "Interpreter");
+    // 4.7 获得一个InterpreterGenerator
     InterpreterGenerator g(_code);
     if (PrintInterpreter) print();
   }
@@ -76,6 +79,7 @@ static const BasicType types[Interpreter::number_of_result_handlers] = {
   T_OBJECT
 };
 
+// 4.9
 void CppInterpreterGenerator::generate_all() {
   AbstractInterpreterGenerator::generate_all();
 
@@ -110,6 +114,9 @@ void CppInterpreterGenerator::generate_all() {
 
 #define method_entry(kind) Interpreter::_entry_table[Interpreter::kind] = generate_method_entry(Interpreter::kind)
 
+  // 4.10 Interpreter::_entry_table中填充函数，函数由generate_method_entry生成
+  // 不同的cpu构架有不同的generate_method_entry实现，例如x86的实现在
+  // hotspot/src/cpu/x86/vm/cppInterpreter_x86.cpp中
   { CodeletMark cm(_masm, "(kind = frame_manager)");
     // all non-native method kinds
     method_entry(zerolocals);

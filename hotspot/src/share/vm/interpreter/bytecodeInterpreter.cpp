@@ -508,6 +508,7 @@ BytecodeInterpreter::run(interpreterState istate) {
   interpreterState orig = istate;
 #endif
 
+  // interpreterState包含了很多信息，例如指令计数器、stack
   register intptr_t*        topOfStack = (intptr_t *)istate->stack(); /* access with STACK macros */
   register address          pc = istate->bcp();
   register jubyte opcode;
@@ -985,6 +986,7 @@ run:
   opcode = *pc;  /* prefetch first opcode */
 #endif
 
+// 在这里开始字节码的解释与执行
 #ifndef USELABELS
   while (1)
 #endif
@@ -2774,6 +2776,7 @@ run:
     check_for_exception:
 #endif
     {
+  // 如果没有直接到do_continue，那么解释完一个指令后都会检查异常
       if (!THREAD->has_pending_exception()) {
         CONTINUE;
       }

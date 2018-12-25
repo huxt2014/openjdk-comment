@@ -107,18 +107,21 @@ typedef AllocFailStrategy::AllocFailEnum AllocFailType;
 //                |  +-------+
 //                +--|Threads|
 //                |  +-------+
-//  +---------+   |  +--------+
-//  |AllStatic|<--+--|os|Linux|
-//  +---------+   |  +--------+
-//                |  +------------------+
-//                +--|ThreadLocalStorage|
-//                |  +------------------+
+//                |  +--------+
+//                +--|os|Linux|
+//                |  +--------+
+//  +---------+   |  +------------------+
+//  |AllStatic|<--+--|ThreadLocalStorage|
+//  +---------+   |  +------------------+
 //                |  +-------------+
 //                +--|ThreadService|
 //                |  +-------------+
 //                |  +----------------+
 //                +--|SystemDictionary|
-//                   +----------------+
+//                |  +----------------+
+//                |  +-------------------+
+//                +--|AbstractInterpreter|
+//                   +-------------------+
 //
 // For classes in Metaspace (class data)
 // - MetaspaceObj

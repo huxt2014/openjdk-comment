@@ -114,6 +114,7 @@ void AbstractInterpreter::print() {
 }
 
 
+// 4.4
 void interpreter_init() {
   Interpreter::initialize();
 #ifndef PRODUCT

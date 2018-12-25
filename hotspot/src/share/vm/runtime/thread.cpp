@@ -3427,6 +3427,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   ObjectMonitor::Initialize() ;
 
   // Initialize global modules
+  // 4.2
   jint status = init_globals();
   if (status != JNI_OK) {
     delete main_thread;

@@ -5203,6 +5203,7 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
   bool can_try_again = true;
 
   // 1.6 创建JVM
+  // 4.1 创建JVM的时候会初始化Interpretor
   result = Threads::create_vm((JavaVMInitArgs*) args, &can_try_again);
   if (result == JNI_OK) {
     JavaThread *thread = JavaThread::current();

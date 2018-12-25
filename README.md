@@ -14,3 +14,4 @@
 1. JVM的启动
 2. 线程的启动
 3. JNI
+4. C++ Interpreter初始化
